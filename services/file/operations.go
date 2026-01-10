@@ -7,31 +7,95 @@ import (
 	"strings"
 )
 
-var root, _ = os.UserHomeDir()
+// GetAllowedRoots returns all allowed root directories for file operations.
+// This includes the user's home directory and all mounted drives.
+func GetAllowedRoots() []string {
+	var roots []string
+
+	// Add home directory
+	if home, err := GetHomeDirectory(); err == nil {
+		roots = append(roots, home)
+	}
+
+	// Add mounted drives (same filtering logic as DrivesDataParser)
+	mounts, err := GetMountedDrives()
+	if err == nil {
+		for _, mount := range mounts {
+			// Filter virtual filesystems
+			if mount.FSType == "tmpfs" || mount.FSType == "devtmpfs" || mount.FSType == "proc" ||
+				mount.FSType == "sysfs" || mount.FSType == "cgroup" || mount.FSType == "overlay" ||
+				mount.FSType == "rootfs" || mount.FSType == "cgroup2" || mount.FSType == "debugfs" ||
+				mount.FSType == "tracefs" || mount.FSType == "configfs" || mount.FSType == "binfmt_misc" ||
+				mount.FSType == "fusectl" || mount.FSType == "hugetlbfs" || mount.FSType == "mqueue" ||
+				mount.FSType == "pstore" || mount.FSType == "securityfs" || mount.FSType == "efivarfs" ||
+				mount.FSType == "bpf" {
+				continue
+			}
+
+			// Exclude system mount points
+			if strings.HasPrefix(mount.MountPoint, "/proc") || strings.HasPrefix(mount.MountPoint, "/sys") ||
+				strings.HasPrefix(mount.MountPoint, "/dev") || strings.HasPrefix(mount.MountPoint, "/run") ||
+				strings.HasPrefix(mount.MountPoint, "/usr") || strings.HasPrefix(mount.MountPoint, "/var/run") ||
+				strings.HasPrefix(mount.MountPoint, "/var/lib/docker") || strings.HasPrefix(mount.MountPoint, "/init") {
+				continue
+			}
+
+			// Include root, /mnt/*, /media/*
+			if mount.MountPoint == "/" || strings.HasPrefix(mount.MountPoint, "/mnt/") ||
+				strings.HasPrefix(mount.MountPoint, "/media") {
+				roots = append(roots, mount.MountPoint)
+			}
+		}
+	}
+
+	return roots
+}
+
+// resolveAndValidatePath converts a path to absolute and validates it's within allowed roots.
+// For paths starting with /, it validates against all allowed roots.
+// For relative paths, it resolves against the home directory.
+// Returns the absolute path and the root it belongs to, or an error.
+func resolveAndValidatePath(path string) (absPath string, root string, err error) {
+	cleanPath := filepath.Clean(path)
+
+	// Determine if path is absolute or relative
+	if filepath.IsAbs(cleanPath) {
+		absPath = cleanPath
+	} else {
+		// Relative path - resolve against home directory
+		home, err := GetHomeDirectory()
+		if err != nil {
+			return "", "", os.ErrPermission
+		}
+		absPath = filepath.Join(home, cleanPath)
+	}
+
+	// Validate path is within an allowed root
+	allowedRoots := GetAllowedRoots()
+	for _, allowedRoot := range allowedRoots {
+		relPath, err := filepath.Rel(allowedRoot, absPath)
+		if err == nil && !strings.HasPrefix(relPath, "..") && relPath != ".." {
+			return absPath, allowedRoot, nil
+		}
+	}
+
+	return "", "", os.ErrPermission
+}
 
 // Renaming file function
 func RenameFile(sourcePath string, newName string) error {
-	// New file name can't be empty
+	// New file name can't be empty or contain path separators
 	if newName == "" || strings.Contains(newName, "/") {
 		return os.ErrInvalid
 	}
 
-	// File must live inside root
-	cleanPath := filepath.Clean(sourcePath)
-
-	absPath := filepath.Join(root, cleanPath)
-
-	relPath, err := filepath.Rel(root, absPath)
+	// Validate and resolve path
+	absPath, _, err := resolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
 
-	if strings.HasPrefix(relPath, "..") {
-		return os.ErrPermission
-	}
-
 	parentDir := filepath.Dir(absPath)
-
 	newPath := filepath.Join(parentDir, newName)
 
 	// Is the destination already exist?
@@ -45,17 +109,9 @@ func RenameFile(sourcePath string, newName string) error {
 
 // Delete file function
 func DeleteFile(path string) error {
-	// File must live inside root
-	cleanPath := filepath.Clean(path)
-
-	absPath := filepath.Join(root, cleanPath)
-
-	relPath, err := filepath.Rel(root, absPath)
+	// Validate and resolve path
+	absPath, _, err := resolveAndValidatePath(path)
 	if err != nil {
-		return os.ErrPermission
-	}
-
-	if strings.HasPrefix(relPath, "..") {
 		return os.ErrPermission
 	}
 
@@ -70,17 +126,14 @@ func DeleteFile(path string) error {
 
 // Delete folder function
 func DeleteFolder(path string) error {
-	// File must live inside root
-	cleanPath := filepath.Clean(path)
-
-	absPath := filepath.Join(root, cleanPath)
-
-	relPath, err := filepath.Rel(root, absPath)
+	// Validate and resolve path
+	absPath, root, err := resolveAndValidatePath(path)
 	if err != nil {
 		return os.ErrPermission
 	}
 
-	if relPath == "." || strings.HasPrefix(relPath, "..") {
+	// Don't allow deleting the root itself
+	if absPath == root {
 		return os.ErrPermission
 	}
 
@@ -95,22 +148,15 @@ func DeleteFolder(path string) error {
 
 // Copy file function
 func CopyFile(sourcePath string, destinationDir string) error {
-	// Clean the paths
-	cleanSourcePath := filepath.Clean(sourcePath)
-	cleanDestinationDir := filepath.Clean(destinationDir)
-
-	// Construct absolute paths
-	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
-	sourceLocation := filepath.Join(root, cleanSourcePath)
-
-	// Ensure source and destination are within root
-	fileRelPath, err := filepath.Rel(root, sourceLocation)
-	if err != nil || strings.HasPrefix(fileRelPath, "..") {
+	// Validate source path
+	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	if err != nil {
 		return os.ErrPermission
 	}
 
-	desRelPath, err := filepath.Rel(root, destinationDirLocation)
-	if err != nil || strings.HasPrefix(desRelPath, "..") {
+	// Validate destination path
+	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	if err != nil {
 		return os.ErrPermission
 	}
 
@@ -123,11 +169,12 @@ func CopyFile(sourcePath string, destinationDir string) error {
 		return os.ErrInvalid
 	}
 
-	// Check the destination file and is it a directory?
+	// Check the destination file doesn't already exist
 	if _, err := os.Stat(destinationFile); err == nil {
 		return os.ErrExist
 	}
 
+	// Check destination is a directory
 	info, err := os.Stat(destinationDirLocation)
 	if err != nil {
 		return os.ErrNotExist
@@ -159,39 +206,33 @@ func CopyFile(sourcePath string, destinationDir string) error {
 
 // Copy folder function
 func CopyFolder(sourcePath string, destinationDir string) error {
-	// Clean the paths
-	cleanSourcePath := filepath.Clean(sourcePath)
-	cleanDestinationDir := filepath.Clean(destinationDir)
-
-	// Construct absolute paths
-	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
-	sourceLocation := filepath.Join(root, cleanSourcePath)
-
-	// Ensure source and destination are within root
-	folderRelPath, err := filepath.Rel(root, sourceLocation)
-	if err != nil || strings.HasPrefix(folderRelPath, "..") {
+	// Validate source path
+	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	if err != nil {
 		return os.ErrPermission
 	}
 
-	desRelPath, err := filepath.Rel(root, destinationDirLocation)
-	if err != nil || strings.HasPrefix(desRelPath, "..") {
+	// Validate destination path
+	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	if err != nil {
 		return os.ErrPermission
 	}
 
 	destinationFolder := filepath.Join(destinationDirLocation, filepath.Base(sourcePath))
 
-	// Check source file existence and is it a directory?
+	// Check source existence and is it a directory?
 	if f, err := os.Stat(sourceLocation); err != nil {
 		return os.ErrNotExist
 	} else if !f.IsDir() {
 		return os.ErrInvalid
 	}
 
-	// Check the destination folder and is it a directory?
+	// Check the destination folder doesn't already exist
 	if _, err := os.Stat(destinationFolder); err == nil {
 		return os.ErrExist
 	}
 
+	// Check destination is a directory
 	info, err := os.Stat(destinationDirLocation)
 	if err != nil {
 		return os.ErrNotExist
@@ -215,6 +256,7 @@ func CopyFolder(sourcePath string, destinationDir string) error {
 		srcPath := filepath.Join(sourceLocation, entry.Name())
 
 		if entry.IsDir() {
+			// Recursive call with absolute paths
 			err = CopyFolder(srcPath, destinationFolder)
 			if err != nil {
 				return err
@@ -232,22 +274,15 @@ func CopyFolder(sourcePath string, destinationDir string) error {
 
 // Cut file function
 func CutFile(sourcePath string, destinationDir string) error {
-	// Clean the paths
-	cleanSourcePath := filepath.Clean(sourcePath)
-	cleanDestinationDir := filepath.Clean(destinationDir)
-
-	// Construct absolute paths
-	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
-	sourceLocation := filepath.Join(root, cleanSourcePath)
-
-	// Ensure source and destination are within root
-	fileRelPath, err := filepath.Rel(root, sourceLocation)
-	if err != nil || strings.HasPrefix(fileRelPath, "..") {
+	// Validate source path
+	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	if err != nil {
 		return os.ErrPermission
 	}
 
-	desRelPath, err := filepath.Rel(root, destinationDirLocation)
-	if err != nil || strings.HasPrefix(desRelPath, "..") {
+	// Validate destination path
+	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	if err != nil {
 		return os.ErrPermission
 	}
 
@@ -260,11 +295,12 @@ func CutFile(sourcePath string, destinationDir string) error {
 		return os.ErrInvalid
 	}
 
-	// Check the destination file and is it a directory?
+	// Check the destination file doesn't already exist
 	if _, err := os.Stat(destinationFile); err == nil {
 		return os.ErrExist
 	}
 
+	// Check destination is a directory
 	info, err := os.Stat(destinationDirLocation)
 	if err != nil {
 		return os.ErrNotExist
@@ -273,55 +309,48 @@ func CutFile(sourcePath string, destinationDir string) error {
 		return os.ErrInvalid
 	}
 
-	// Perform the cut operation
+	// Try direct rename first (faster, works on same filesystem)
 	if err := os.Rename(sourceLocation, destinationFile); err == nil {
 		return nil
 	}
 
-	// fallback cross-filesystem cut
+	// Fallback: cross-filesystem move (copy + delete)
 	if err := CopyFile(sourcePath, destinationDir); err != nil {
 		return err
 	}
 
 	return os.Remove(sourceLocation)
-
 }
 
 // Cut folder function
 func CutFolder(sourcePath string, destinationDir string) error {
-	// Clean the paths
-	cleanSourcePath := filepath.Clean(sourcePath)
-	cleanDestinationDir := filepath.Clean(destinationDir)
-
-	// Construct absolute paths
-	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
-	sourceLocation := filepath.Join(root, cleanSourcePath)
-
-	// Ensure source and destination are within root
-	folderRelPath, err := filepath.Rel(root, sourceLocation)
-	if err != nil || strings.HasPrefix(folderRelPath, "..") {
+	// Validate source path
+	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	if err != nil {
 		return os.ErrPermission
 	}
 
-	desRelPath, err := filepath.Rel(root, destinationDirLocation)
-	if err != nil || strings.HasPrefix(desRelPath, "..") {
+	// Validate destination path
+	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	if err != nil {
 		return os.ErrPermission
 	}
 
 	destinationFolder := filepath.Join(destinationDirLocation, filepath.Base(sourcePath))
 
-	// Check source file existence and is it a directory?
+	// Check source existence and is it a directory?
 	if f, err := os.Stat(sourceLocation); err != nil {
 		return os.ErrNotExist
 	} else if !f.IsDir() {
 		return os.ErrInvalid
 	}
 
-	// Check the destination folder and is it a directory?
+	// Check the destination folder doesn't already exist
 	if _, err := os.Stat(destinationFolder); err == nil {
 		return os.ErrExist
 	}
 
+	// Check destination is a directory
 	info, err := os.Stat(destinationDirLocation)
 	if err != nil {
 		return os.ErrNotExist
@@ -330,15 +359,72 @@ func CutFolder(sourcePath string, destinationDir string) error {
 		return os.ErrInvalid
 	}
 
-	// Perform the cut operation
+	// Try direct rename first (faster, works on same filesystem)
 	if err := os.Rename(sourceLocation, destinationFolder); err == nil {
 		return nil
 	}
 
-	// Fallback cross-filesystem move
-	if err := CopyFolder(sourcePath, destinationDir); err != nil {
+	// Fallback: cross-filesystem move (copy + delete)
+	if err := CopyFolder(sourceLocation, destinationDir); err != nil {
 		return err
 	}
 
 	return os.RemoveAll(sourceLocation)
+}
+
+// Generic Delete function (handles both file and folder)
+func Delete(path string) error {
+	// Validate and resolve path
+	absPath, _, err := resolveAndValidatePath(path)
+	if err != nil {
+		return os.ErrPermission
+	}
+
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return os.ErrNotExist
+	}
+
+	if info.IsDir() {
+		return DeleteFolder(path)
+	}
+	return DeleteFile(path)
+}
+
+// Generic Copy function (handles both file and folder)
+func Copy(sourcePath, destinationDir string) error {
+	// Validate source path
+	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	if err != nil {
+		return os.ErrPermission
+	}
+
+	info, err := os.Stat(sourceLocation)
+	if err != nil {
+		return os.ErrNotExist
+	}
+
+	if info.IsDir() {
+		return CopyFolder(sourcePath, destinationDir)
+	}
+	return CopyFile(sourcePath, destinationDir)
+}
+
+// Generic Cut function (handles both file and folder)
+func Cut(sourcePath, destinationDir string) error {
+	// Validate source path
+	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	if err != nil {
+		return os.ErrPermission
+	}
+
+	info, err := os.Stat(sourceLocation)
+	if err != nil {
+		return os.ErrNotExist
+	}
+
+	if info.IsDir() {
+		return CutFolder(sourcePath, destinationDir)
+	}
+	return CutFile(sourcePath, destinationDir)
 }

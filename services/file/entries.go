@@ -34,7 +34,7 @@ func FileEntries(path string) ([]FilesList, error) {
 
 	// Default to HOME if path is empty
 	if path == "" {
-		home, err := os.UserHomeDir()
+		home, err := GetHomeDirectory()
 		if err != nil {
 			return nil, err
 		}

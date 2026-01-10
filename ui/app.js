@@ -52,3 +52,29 @@ socket.onmessage = (event) => {
 socket.onopen = () => { console.log("Connected to the Go pipe!"); };
 socket.onclose = () => { console.log("Connection lost."); };
 socket.onerror = (error) => { console.log("WebSocket Error: ", error); };
+
+// SPA Logic
+const appContainer = document.getElementById('app-container');
+const appIframe = document.getElementById('app-iframe');
+
+function openApp(url) {
+    if (!appContainer || !appIframe) return;
+    appIframe.src = url;
+    appContainer.classList.add('visible');
+}
+
+function closeApp() {
+    if (!appContainer || !appIframe) return;
+    appContainer.classList.remove('visible');
+    // Clear src after transition to avoid flash
+    setTimeout(() => {
+        appIframe.src = "";
+    }, 300);
+}
+
+// Listen for close messages from apps
+window.addEventListener('message', (event) => {
+    if (event.data === 'close-app') {
+        closeApp();
+    }
+});

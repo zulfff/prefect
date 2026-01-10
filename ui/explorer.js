@@ -4,6 +4,7 @@
 
 // ===== 1. State =====
 let currentPath = ""; // empty = Home
+let homePath = ""; // Will be updated from API
 let selectedFile = null; // Currently selected file data
 let clipboard = {
   items: [], // Array of file data objects
@@ -73,25 +74,35 @@ function getFileIcon(file) {
  * Format path for display (replace home with ~)
  */
 function formatPathForDisplay(path) {
-  if (!path) return "~/";
-  // Try to detect home directory pattern and replace with ~
-  const homeMatch = path.match(/^(\/home\/[^/]+)/);
-  if (homeMatch) {
-    return path.replace(homeMatch[1], "~") + "/";
+  if (!path || path === homePath) return "~";
+
+  if (!homePath) {
+    // Fallback until homePath is loaded
+    const homeMatch = path.match(/^(\/home\/[^/]+)/);
+    if (homeMatch) return path.replace(homeMatch[1], "~");
+    return path;
   }
-  return path + "/";
+
+  if (path.startsWith(homePath)) {
+    return "~" + path.slice(homePath.length);
+  }
+  return path;
 }
 
 /**
  * Convert absolute path to relative path (for API calls)
+ * Returns paths relative to home without leading slash, or absolute paths for drives
  */
 function toRelativePath(absPath) {
   if (!absPath) return "";
   // Remove home directory prefix
   const homeMatch = absPath.match(/^\/home\/[^/]+(.*)$/);
   if (homeMatch) {
-    return homeMatch[1] || "";
+    // Remove leading slash to make it a proper relative path
+    const relativePart = homeMatch[1] || "";
+    return relativePart.startsWith('/') ? relativePart.substring(1) : relativePart;
   }
+  // For non-home paths (like /mnt/HDD), return as-is (absolute)
   return absPath;
 }
 
@@ -414,92 +425,89 @@ function FileCard(file) {
  */
 function PathBreadcrumbs(path) {
   const container = document.createDocumentFragment();
+  const displayPath = formatPathForDisplay(path);
+  const isHome = displayPath.startsWith("~");
 
-  if (!path) {
-    // Show just "~/" for home
-    const segment = document.createElement("span");
-    segment.className = "breadcrumb-segment";
-    segment.textContent = "~/";
-    container.appendChild(segment);
+  // Split path into parts and remove empty ones
+  const parts = displayPath.split("/").filter(Boolean);
+
+  // If initial path was empty or resolved to just "~"
+  if (parts.length === 0 || (parts.length === 1 && parts[0] === "~")) {
+    const rootSeg = document.createElement("span");
+    rootSeg.className = "breadcrumb-segment";
+    rootSeg.textContent = isHome ? "~" : "Root";
+    rootSeg.onclick = () => {
+      currentPath = isHome ? "" : "/";
+      loadExplorer();
+    };
+    container.appendChild(rootSeg);
+
+    const sep = document.createElement("span");
+    sep.className = "breadcrumb-separator";
+    sep.textContent = "/";
+    container.appendChild(sep);
     return container;
   }
 
-  // Parse path into segments
-  const displayPath = formatPathForDisplay(path);
-  const isHomePath = displayPath.startsWith("~");
+  if (isHome) {
+    // Home paths: "~", "Downloads", etc.
+    // parts[0] is "~"
+    let fullPath = homePath;
 
-  if (isHomePath) {
-    // Handle home-relative paths
-    const pathWithoutHome = displayPath.slice(1); // Remove ~
-    const segments = pathWithoutHome.split("/").filter(Boolean);
+    parts.forEach((part, index) => {
+      const segEl = document.createElement("span");
+      segEl.className = "breadcrumb-segment";
+      segEl.textContent = part;
 
-    // Add ~ segment (clickable to go home)
-    const homeSegment = document.createElement("span");
-    homeSegment.className = "breadcrumb-segment";
-    homeSegment.textContent = "~";
-    homeSegment.onclick = () => {
-      currentPath = "";
-      loadExplorer();
-    };
-    container.appendChild(homeSegment);
+      let targetPath;
+      if (part === "~") {
+        targetPath = homePath;
+      } else {
+        fullPath = fullPath.endsWith("/") ? fullPath + part : fullPath + "/" + part;
+        targetPath = fullPath;
+      }
 
-    // Build paths for each segment
-    const homeMatch = path.match(/^(\/home\/[^/]+)/);
-    let buildPath = homeMatch ? homeMatch[1] : "";
+      segEl.onclick = () => {
+        currentPath = targetPath;
+        loadExplorer();
+      };
+      container.appendChild(segEl);
 
-    segments.forEach((segment, index) => {
-      // Add separator
       const sep = document.createElement("span");
       sep.className = "breadcrumb-separator";
       sep.textContent = "/";
       container.appendChild(sep);
-
-      buildPath += "/" + segment;
-      const segmentPath = buildPath;
-
-      const segmentEl = document.createElement("span");
-      segmentEl.className = "breadcrumb-segment";
-      segmentEl.textContent = segment;
-      segmentEl.onclick = () => {
-        currentPath = segmentPath;
-        loadExplorer();
-      };
-      container.appendChild(segmentEl);
     });
-
-    // Add trailing slash
-    const trailingSep = document.createElement("span");
-    trailingSep.className = "breadcrumb-separator";
-    trailingSep.textContent = "/";
-    container.appendChild(trailingSep);
-
   } else {
-    // Handle absolute paths (drives, etc.)
-    const segments = path.split("/").filter(Boolean);
-    let buildPath = "";
-
-    // Add root segment
-    const rootSegment = document.createElement("span");
-    rootSegment.className = "breadcrumb-segment";
-    rootSegment.textContent = "/";
-    rootSegment.onclick = () => {
+    // Absolute paths: "/", "mnt", "HDD", etc.
+    // Render the root segment first
+    const rootSeg = document.createElement("span");
+    rootSeg.className = "breadcrumb-segment";
+    rootSeg.textContent = "Root";
+    rootSeg.onclick = () => {
       currentPath = "/";
       loadExplorer();
     };
-    container.appendChild(rootSegment);
+    container.appendChild(rootSeg);
 
-    segments.forEach((segment) => {
-      buildPath += "/" + segment;
-      const segmentPath = buildPath;
+    const rootSep = document.createElement("span");
+    rootSep.className = "breadcrumb-separator";
+    rootSep.textContent = "/";
+    container.appendChild(rootSep);
 
-      const segmentEl = document.createElement("span");
-      segmentEl.className = "breadcrumb-segment";
-      segmentEl.textContent = segment;
-      segmentEl.onclick = () => {
-        currentPath = segmentPath;
+    let fullPath = "";
+    parts.forEach((part) => {
+      fullPath += "/" + part;
+      const targetPath = fullPath;
+
+      const segEl = document.createElement("span");
+      segEl.className = "breadcrumb-segment";
+      segEl.textContent = part;
+      segEl.onclick = () => {
+        currentPath = targetPath;
         loadExplorer();
       };
-      container.appendChild(segmentEl);
+      container.appendChild(segEl);
 
       const sep = document.createElement("span");
       sep.className = "breadcrumb-separator";
@@ -587,6 +595,9 @@ function loadExplorer() {
   fetch(url)
     .then((res) => res.json())
     .then((data) => {
+      if (data.sidebar && data.sidebar.length > 0) {
+        homePath = data.sidebar[0].directory_path;
+      }
       renderShortcuts(data.sidebar);
       renderDrives(data.drives);
       renderFiles(data.files);
@@ -607,7 +618,12 @@ function loadExplorer() {
 
 // Close button - navigate back to index
 closeBtnEl.onclick = () => {
-  window.location.href = "index.html";
+  // Check if running in iframe
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage('close-app', '*');
+  } else {
+    window.location.href = "index.html";
+  }
 };
 
 // Hide context menu on click outside

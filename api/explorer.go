@@ -1,14 +1,14 @@
 package api
 
 import (
-	"net/http"
-	"prefect/services/parser"
-	"prefect/services/file"
 	"encoding/json"
+	"net/http"
+	"prefect/services/file"
+	"prefect/services/parser"
 )
 
 type FileExplorer struct {
-	Files   []file.FilesList   `json:"files"`
+	Files   []file.FilesList     `json:"files"`
 	Sidebar []parser.SidebarData `json:"sidebar"`
 	Drives  []parser.DrivesData  `json:"drives"`
 }
@@ -48,7 +48,7 @@ func FileExplorerAPI(response http.ResponseWriter, request *http.Request) {
 func DeleteAPI(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Query().Get("path")
 
-	if err := file.DeleteFile(path); err != nil {
+	if err := file.Delete(path); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -74,7 +74,7 @@ func CopyAPI(w http.ResponseWriter, r *http.Request) {
 	src := r.URL.Query().Get("src")
 	dst := r.URL.Query().Get("dst")
 
-	if err := file.CopyFile(src, dst); err != nil {
+	if err := file.Copy(src, dst); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -87,7 +87,7 @@ func CutAPI(w http.ResponseWriter, r *http.Request) {
 	src := r.URL.Query().Get("src")
 	dst := r.URL.Query().Get("dst")
 
-	if err := file.CutFile(src, dst); err != nil {
+	if err := file.Cut(src, dst); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
