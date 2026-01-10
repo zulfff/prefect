@@ -4,6 +4,11 @@
 
 // ===== 1. State =====
 let currentPath = ""; // empty = Home
+let selectedFile = null; // Currently selected file data
+let clipboard = {
+  items: [], // Array of file data objects
+  operation: null, // 'copy' or 'cut'
+};
 
 // ===== 2. DOM Elements =====
 const shortcutsEl = document.getElementById("shortcuts");
@@ -11,6 +16,9 @@ const drivesEl = document.getElementById("drives");
 const filesEl = document.getElementById("files");
 const breadcrumbsEl = document.getElementById("breadcrumbs");
 const closeBtnEl = document.getElementById("close-btn");
+const contextMenuEl = document.getElementById("context-menu");
+const renameModalEl = document.getElementById("rename-modal");
+const deleteModalEl = document.getElementById("delete-modal");
 
 // ===== 3. Icon Mapping =====
 const SIDEBAR_ICONS = {
@@ -74,7 +82,257 @@ function formatPathForDisplay(path) {
   return path + "/";
 }
 
-// ===== 5. Component Functions =====
+/**
+ * Convert absolute path to relative path (for API calls)
+ */
+function toRelativePath(absPath) {
+  if (!absPath) return "";
+  // Remove home directory prefix
+  const homeMatch = absPath.match(/^\/home\/[^/]+(.*)$/);
+  if (homeMatch) {
+    return homeMatch[1] || "";
+  }
+  return absPath;
+}
+
+// ===== 5. API Functions =====
+
+async function apiDelete(path, isDir) {
+  const endpoint = isDir ? '/api/explorer/delete' : '/api/explorer/delete';
+  const relativePath = toRelativePath(path);
+  const url = `${endpoint}?path=${encodeURIComponent(relativePath)}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return true;
+}
+
+async function apiRename(path, newName) {
+  const relativePath = toRelativePath(path);
+  const url = `/api/explorer/rename?path=${encodeURIComponent(relativePath)}&name=${encodeURIComponent(newName)}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return true;
+}
+
+async function apiCopy(srcPath, dstDir) {
+  const relativeSrc = toRelativePath(srcPath);
+  const relativeDst = toRelativePath(dstDir);
+  const url = `/api/explorer/copy?src=${encodeURIComponent(relativeSrc)}&dst=${encodeURIComponent(relativeDst)}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return true;
+}
+
+async function apiCut(srcPath, dstDir) {
+  const relativeSrc = toRelativePath(srcPath);
+  const relativeDst = toRelativePath(dstDir);
+  const url = `/api/explorer/cut?src=${encodeURIComponent(relativeSrc)}&dst=${encodeURIComponent(relativeDst)}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  return true;
+}
+
+// ===== 6. Clipboard Operations =====
+
+function copyToClipboard(file) {
+  clipboard.items = [file];
+  clipboard.operation = 'copy';
+  updateCutVisuals();
+}
+
+function cutToClipboard(file) {
+  clipboard.items = [file];
+  clipboard.operation = 'cut';
+  updateCutVisuals();
+}
+
+function clearClipboard() {
+  clipboard.items = [];
+  clipboard.operation = null;
+  updateCutVisuals();
+}
+
+function updateCutVisuals() {
+  // Remove all cut classes
+  document.querySelectorAll('.file-card.cut').forEach(el => {
+    el.classList.remove('cut');
+  });
+
+  // Add cut class to items in clipboard if operation is 'cut'
+  if (clipboard.operation === 'cut') {
+    clipboard.items.forEach(item => {
+      const card = document.querySelector(`.file-card[data-path="${item.path}"]`);
+      if (card) {
+        card.classList.add('cut');
+      }
+    });
+  }
+}
+
+async function pasteFromClipboard() {
+  if (clipboard.items.length === 0) return;
+
+  const destPath = currentPath || "";
+
+  try {
+    for (const item of clipboard.items) {
+      if (clipboard.operation === 'copy') {
+        await apiCopy(item.path, destPath);
+      } else if (clipboard.operation === 'cut') {
+        await apiCut(item.path, destPath);
+      }
+    }
+
+    if (clipboard.operation === 'cut') {
+      clearClipboard();
+    }
+
+    loadExplorer();
+  } catch (err) {
+    console.error("Paste failed:", err);
+    alert("Failed to paste: " + err.message);
+  }
+}
+
+// ===== 7. Context Menu =====
+
+function showContextMenu(x, y, file) {
+  selectedFile = file;
+
+  // Position the menu
+  contextMenuEl.style.left = `${x}px`;
+  contextMenuEl.style.top = `${y}px`;
+
+  // Enable/disable menu items based on context
+  const copyBtn = document.getElementById('ctx-copy');
+  const cutBtn = document.getElementById('ctx-cut');
+  const pasteBtn = document.getElementById('ctx-paste');
+  const renameBtn = document.getElementById('ctx-rename');
+  const deleteBtn = document.getElementById('ctx-delete');
+
+  if (file) {
+    copyBtn.classList.remove('disabled');
+    cutBtn.classList.remove('disabled');
+    renameBtn.classList.remove('disabled');
+    deleteBtn.classList.remove('disabled');
+  } else {
+    copyBtn.classList.add('disabled');
+    cutBtn.classList.add('disabled');
+    renameBtn.classList.add('disabled');
+    deleteBtn.classList.add('disabled');
+  }
+
+  // Enable paste only if clipboard has items
+  if (clipboard.items.length > 0) {
+    pasteBtn.classList.remove('disabled');
+  } else {
+    pasteBtn.classList.add('disabled');
+  }
+
+  // Show menu
+  contextMenuEl.classList.add('visible');
+
+  // Adjust position if menu goes off screen
+  const rect = contextMenuEl.getBoundingClientRect();
+  if (rect.right > window.innerWidth) {
+    contextMenuEl.style.left = `${window.innerWidth - rect.width - 10}px`;
+  }
+  if (rect.bottom > window.innerHeight) {
+    contextMenuEl.style.top = `${window.innerHeight - rect.height - 10}px`;
+  }
+}
+
+function hideContextMenu() {
+  contextMenuEl.classList.remove('visible');
+}
+
+// ===== 8. Modal Functions =====
+
+function showRenameModal(file) {
+  const input = document.getElementById('rename-input');
+  input.value = file.name;
+  renameModalEl.classList.add('visible');
+
+  // Select filename without extension for files
+  setTimeout(() => {
+    input.focus();
+    if (!file.is_dir && file.name.includes('.')) {
+      const lastDot = file.name.lastIndexOf('.');
+      input.setSelectionRange(0, lastDot);
+    } else {
+      input.select();
+    }
+  }, 50);
+}
+
+function hideRenameModal() {
+  renameModalEl.classList.remove('visible');
+}
+
+async function confirmRename() {
+  const input = document.getElementById('rename-input');
+  const newName = input.value.trim();
+
+  if (!newName || !selectedFile) {
+    hideRenameModal();
+    return;
+  }
+
+  if (newName === selectedFile.name) {
+    hideRenameModal();
+    return;
+  }
+
+  try {
+    await apiRename(selectedFile.path, newName);
+    hideRenameModal();
+    loadExplorer();
+  } catch (err) {
+    console.error("Rename failed:", err);
+    alert("Failed to rename: " + err.message);
+  }
+}
+
+function showDeleteModal(file) {
+  const message = document.getElementById('delete-message');
+  message.textContent = `Are you sure you want to delete "${file.name}"?`;
+  deleteModalEl.classList.add('visible');
+}
+
+function hideDeleteModal() {
+  deleteModalEl.classList.remove('visible');
+}
+
+async function confirmDelete() {
+  if (!selectedFile) {
+    hideDeleteModal();
+    return;
+  }
+
+  try {
+    await apiDelete(selectedFile.path, selectedFile.is_dir);
+    hideDeleteModal();
+    selectedFile = null;
+    loadExplorer();
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert("Failed to delete: " + err.message);
+  }
+}
+
+// ===== 9. Component Functions =====
 
 /**
  * Create a sidebar item element
@@ -99,6 +357,7 @@ function SidebarItem(name, path, iconSrc) {
 function FileCard(file) {
   const div = document.createElement("div");
   div.className = "file-card";
+  div.setAttribute('data-path', file.path);
   const iconSrc = getFileIcon(file);
 
   div.innerHTML = `
@@ -106,11 +365,45 @@ function FileCard(file) {
     <span>${file.name}</span>
   `;
 
-  if (file.is_dir) {
-    div.onclick = () => {
-      currentPath = file.path;
-      loadExplorer();
-    };
+  // Left click - navigate into folders or select files
+  div.onclick = (e) => {
+    e.stopPropagation();
+
+    // Clear previous selection
+    document.querySelectorAll('.file-card.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+
+    // Select this card
+    div.classList.add('selected');
+    selectedFile = file;
+
+    // Double-click to navigate
+    if (file.is_dir) {
+      if (e.detail === 2) { // Double click
+        currentPath = file.path;
+        loadExplorer();
+      }
+    }
+  };
+
+  // Right click - show context menu
+  div.oncontextmenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Select the card
+    document.querySelectorAll('.file-card.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    div.classList.add('selected');
+
+    showContextMenu(e.clientX, e.clientY, file);
+  };
+
+  // Check if this file is in the cut clipboard
+  if (clipboard.operation === 'cut' && clipboard.items.some(item => item.path === file.path)) {
+    div.classList.add('cut');
   }
 
   return div;
@@ -218,7 +511,7 @@ function PathBreadcrumbs(path) {
   return container;
 }
 
-// ===== 6. Render Functions =====
+// ===== 10. Render Functions =====
 
 /**
  * Render sidebar shortcuts (Home, Documents, Downloads, Media)
@@ -284,7 +577,7 @@ function renderBreadcrumbs(path) {
   breadcrumbsEl.appendChild(breadcrumbs);
 }
 
-// ===== 7. Main Loader =====
+// ===== 11. Main Loader =====
 
 function loadExplorer() {
   const url = currentPath
@@ -298,6 +591,7 @@ function loadExplorer() {
       renderDrives(data.drives);
       renderFiles(data.files);
       renderBreadcrumbs(currentPath);
+      selectedFile = null;
     })
     .catch((err) => {
       console.error("Failed to load explorer:", err);
@@ -309,12 +603,142 @@ function loadExplorer() {
     });
 }
 
-// ===== 8. Event Listeners =====
+// ===== 12. Event Listeners =====
 
 // Close button - navigate back to index
 closeBtnEl.onclick = () => {
   window.location.href = "index.html";
 };
 
-// ===== 9. Initial Load =====
+// Hide context menu on click outside
+document.addEventListener('click', (e) => {
+  if (!contextMenuEl.contains(e.target)) {
+    hideContextMenu();
+  }
+
+  // Deselect if clicking on empty space in files grid
+  if (e.target === filesEl || e.target.classList.contains('empty-state')) {
+    document.querySelectorAll('.file-card.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    selectedFile = null;
+  }
+});
+
+// Right click on empty space in files grid
+filesEl.addEventListener('contextmenu', (e) => {
+  if (e.target === filesEl || e.target.classList.contains('empty-state')) {
+    e.preventDefault();
+    showContextMenu(e.clientX, e.clientY, null);
+  }
+});
+
+// Context menu item handlers
+document.getElementById('ctx-copy').onclick = () => {
+  if (selectedFile) {
+    copyToClipboard(selectedFile);
+  }
+  hideContextMenu();
+};
+
+document.getElementById('ctx-cut').onclick = () => {
+  if (selectedFile) {
+    cutToClipboard(selectedFile);
+  }
+  hideContextMenu();
+};
+
+document.getElementById('ctx-paste').onclick = () => {
+  pasteFromClipboard();
+  hideContextMenu();
+};
+
+document.getElementById('ctx-rename').onclick = () => {
+  if (selectedFile) {
+    showRenameModal(selectedFile);
+  }
+  hideContextMenu();
+};
+
+document.getElementById('ctx-delete').onclick = () => {
+  if (selectedFile) {
+    showDeleteModal(selectedFile);
+  }
+  hideContextMenu();
+};
+
+// Rename modal handlers
+document.getElementById('rename-cancel').onclick = hideRenameModal;
+document.getElementById('rename-confirm').onclick = confirmRename;
+document.getElementById('rename-input').onkeydown = (e) => {
+  if (e.key === 'Enter') {
+    confirmRename();
+  } else if (e.key === 'Escape') {
+    hideRenameModal();
+  }
+};
+
+// Delete modal handlers
+document.getElementById('delete-cancel').onclick = hideDeleteModal;
+document.getElementById('delete-confirm').onclick = confirmDelete;
+
+// Close modals on overlay click
+renameModalEl.onclick = (e) => {
+  if (e.target === renameModalEl) {
+    hideRenameModal();
+  }
+};
+
+deleteModalEl.onclick = (e) => {
+  if (e.target === deleteModalEl) {
+    hideDeleteModal();
+  }
+};
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  // Don't handle shortcuts if modal is open or typing in input
+  if (renameModalEl.classList.contains('visible') ||
+    deleteModalEl.classList.contains('visible') ||
+    e.target.tagName === 'INPUT') {
+    return;
+  }
+
+  // Delete key
+  if (e.key === 'Delete' && selectedFile) {
+    e.preventDefault();
+    showDeleteModal(selectedFile);
+  }
+
+  // F2 - Rename
+  if (e.key === 'F2' && selectedFile) {
+    e.preventDefault();
+    showRenameModal(selectedFile);
+  }
+
+  // Ctrl+C - Copy
+  if (e.ctrlKey && e.key === 'c' && selectedFile) {
+    e.preventDefault();
+    copyToClipboard(selectedFile);
+  }
+
+  // Ctrl+X - Cut
+  if (e.ctrlKey && e.key === 'x' && selectedFile) {
+    e.preventDefault();
+    cutToClipboard(selectedFile);
+  }
+
+  // Ctrl+V - Paste
+  if (e.ctrlKey && e.key === 'v' && clipboard.items.length > 0) {
+    e.preventDefault();
+    pasteFromClipboard();
+  }
+
+  // Escape - hide context menu
+  if (e.key === 'Escape') {
+    hideContextMenu();
+  }
+});
+
+// ===== 13. Initial Load =====
 loadExplorer();
