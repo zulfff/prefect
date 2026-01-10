@@ -10,6 +10,10 @@ import (
 func main() {
 	// Initialize default directories in case they don't exist
 	file.DefaultDirectories()
+	http.HandleFunc("/api/explorer/delete", api.DeleteAPI)
+	http.HandleFunc("/api/explorer/rename", api.RenameAPI)
+	http.HandleFunc("/api/explorer/copy", api.CopyAPI)
+	http.HandleFunc("/api/explorer/cut", api.CutAPI)
 
 	// 1. The WebSocket API route
 	// This maps the TypeScript "new WebSocket('ws://.../ws')" to your Go handler
