@@ -1,12 +1,12 @@
 package parser
 
 import (
-	"prefect/services/file"
-	"prefect/services/sys"
-	// "prefect/services/file"
 	"encoding/json"
 	"log"
 	"os"
+	"prefect/services/file"
+	"prefect/services/sys"
+	"strings"
 	"time"
 )
 
@@ -56,13 +56,39 @@ func SysDataParser() SysData {
 }
 
 func DrivesDataParser() {
-	mounts, err := file.GetMountedDrives()
+	allMounts, err := file.GetMountedDrives()
 
 	if err != nil {
 		log.Println("Error fetching mounted drives:", err)
 		return
 	}
 
+	var filteredMounts []DrivesData
+
+	for _, mount := range allMounts {
+		// Filter these filesystems
+		if mount.FSType == "tmpfs" || mount.FSType == "devtmpfs" || mount.FSType == "proc" || mount.FSType == "sysfs" || mount.FSType == "cgroup" || mount.FSType == "overlay" || mount.FSType == "rootfs" || mount.FSType == "cgroup2" || mount.FSType == "debugfs" || mount.FSType == "tracefs" || mount.FSType == "configfs" || mount.FSType == "binfmt_misc" || mount.FSType == "fusectl" || mount.FSType == "hugetlbfs" || mount.FSType == "mqueue" || mount.FSType == "pstore" || mount.FSType == "securityfs" || mount.FSType == "efivarfs" || mount.FSType == "bpf" {
+			continue
+		}
+
+		// Exclude system mount points
+		if strings.HasPrefix(mount.MountPoint, "/proc") || strings.HasPrefix(mount.MountPoint, "/sys") || strings.HasPrefix(mount.MountPoint, "/sys/fs") || strings.HasPrefix(mount.MountPoint, "/sys/kernel") || strings.HasPrefix(mount.MountPoint, "/dev") || strings.HasPrefix(mount.MountPoint, "/dev/pts") || strings.HasPrefix(mount.MountPoint, "/dev/mqueue") || strings.HasPrefix(mount.MountPoint, "/dev/hugepages") || strings.HasPrefix(mount.MountPoint, "/run") || strings.HasPrefix(mount.MountPoint, "/run/user") || strings.HasPrefix(mount.MountPoint, "/usr") || strings.HasPrefix(mount.MountPoint, "/usr/lib") || strings.HasPrefix(mount.MountPoint, "/usr/lib/wsl") || strings.HasPrefix(mount.MountPoint, "/usr/lib/modules") || strings.HasPrefix(mount.MountPoint, "/var/run") || strings.HasPrefix(mount.MountPoint, "/var/lib/docker") || strings.HasPrefix(mount.MountPoint, "/var/lib/containerd") || strings.HasPrefix(mount.MountPoint, "/var/lib/kubelet") || strings.HasPrefix(mount.MountPoint, "/init") {
+			continue
+		}
+
+		// Only include root, internal and external drives
+		if mount.MountPoint == "/" || strings.HasPrefix(mount.MountPoint, "/mnt/") || strings.HasPrefix(mount.MountPoint, "/media") {
+			filteredMounts = append(filteredMounts, DrivesData{
+				Device:     mount.Device,
+				MountPoint: mount.MountPoint,
+				FSType:     mount.FSType,
+			})
+		}
+	}
+
+	mounts := filteredMounts
+
+	// Write to drives.json
 	jsoner, jerr := os.OpenFile("drives.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 
 	if jerr != nil {
