@@ -1,0 +1,182 @@
+[
+    {
+        "device": "none",
+        "mount_point": "/usr/lib/modules/6.6.87.2-microsoft-standard-WSL2",
+        "fs_type": "overlay"
+    },
+    {
+        "device": "none",
+        "mount_point": "/mnt/wsl",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "drivers",
+        "mount_point": "/usr/lib/wsl/drivers",
+        "fs_type": "9p"
+    },
+    {
+        "device": "/dev/sdd",
+        "mount_point": "/",
+        "fs_type": "ext4"
+    },
+    {
+        "device": "none",
+        "mount_point": "/mnt/wslg",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "/dev/sdd",
+        "mount_point": "/mnt/wslg/distro",
+        "fs_type": "ext4"
+    },
+    {
+        "device": "none",
+        "mount_point": "/usr/lib/wsl/lib",
+        "fs_type": "overlay"
+    },
+    {
+        "device": "rootfs",
+        "mount_point": "/init",
+        "fs_type": "rootfs"
+    },
+    {
+        "device": "none",
+        "mount_point": "/dev",
+        "fs_type": "devtmpfs"
+    },
+    {
+        "device": "sysfs",
+        "mount_point": "/sys",
+        "fs_type": "sysfs"
+    },
+    {
+        "device": "proc",
+        "mount_point": "/proc",
+        "fs_type": "proc"
+    },
+    {
+        "device": "devpts",
+        "mount_point": "/dev/pts",
+        "fs_type": "devpts"
+    },
+    {
+        "device": "none",
+        "mount_point": "/run",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "none",
+        "mount_point": "/run/lock",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "none",
+        "mount_point": "/run/shm",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "none",
+        "mount_point": "/dev/shm",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "none",
+        "mount_point": "/run/user",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "binfmt_misc",
+        "mount_point": "/proc/sys/fs/binfmt_misc",
+        "fs_type": "binfmt_misc"
+    },
+    {
+        "device": "cgroup2",
+        "mount_point": "/sys/fs/cgroup",
+        "fs_type": "cgroup2"
+    },
+    {
+        "device": "none",
+        "mount_point": "/mnt/wslg/versions.txt",
+        "fs_type": "overlay"
+    },
+    {
+        "device": "none",
+        "mount_point": "/mnt/wslg/doc",
+        "fs_type": "overlay"
+    },
+    {
+        "device": "none",
+        "mount_point": "/tmp/.X11-unix",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "C:\\134",
+        "mount_point": "/mnt/c",
+        "fs_type": "9p"
+    },
+    {
+        "device": "M:\\134",
+        "mount_point": "/mnt/m",
+        "fs_type": "9p"
+    },
+    {
+        "device": "X:\\134",
+        "mount_point": "/mnt/x",
+        "fs_type": "9p"
+    },
+    {
+        "device": "Y:\\134",
+        "mount_point": "/mnt/y",
+        "fs_type": "9p"
+    },
+    {
+        "device": "none",
+        "mount_point": "/run/user",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "hugetlbfs",
+        "mount_point": "/dev/hugepages",
+        "fs_type": "hugetlbfs"
+    },
+    {
+        "device": "debugfs",
+        "mount_point": "/sys/kernel/debug",
+        "fs_type": "debugfs"
+    },
+    {
+        "device": "mqueue",
+        "mount_point": "/dev/mqueue",
+        "fs_type": "mqueue"
+    },
+    {
+        "device": "tracefs",
+        "mount_point": "/sys/kernel/tracing",
+        "fs_type": "tracefs"
+    },
+    {
+        "device": "fusectl",
+        "mount_point": "/sys/fs/fuse/connections",
+        "fs_type": "fusectl"
+    },
+    {
+        "device": "configfs",
+        "mount_point": "/sys/kernel/config",
+        "fs_type": "configfs"
+    },
+    {
+        "device": "/dev/sdd",
+        "mount_point": "/var/lib/docker",
+        "fs_type": "ext4"
+    },
+    {
+        "device": "tmpfs",
+        "mount_point": "/run/user/1000",
+        "fs_type": "tmpfs"
+    },
+    {
+        "device": "tmpfs",
+        "mount_point": "/mnt/wslg/run/user/1000",
+        "fs_type": "tmpfs"
+    }
+]

@@ -12,7 +12,8 @@ type Mount struct {
 	FSType     string `json:"fs_type"`
 }
 
-func GetMountedDisks() ([]Mount, error) {
+func GetMountedDrives() ([]Mount, error) {
+	// Directory where all the mounts data are located
 	file, err := os.Open("/proc/mounts")
 
 	if err != nil {
@@ -23,6 +24,8 @@ func GetMountedDisks() ([]Mount, error) {
 	var mounts []Mount
 	scanner := bufio.NewScanner(file)
 
+	// Read each line from /proc/mounts
+	// Then slice it into parts
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.Fields(line)
