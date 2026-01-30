@@ -42,5 +42,4 @@ func SysDataParser() SysData {
 		DiskTotal:  DiskTotal,
 		DiskUsage:  DiskUsage,
 	}
-
 }
