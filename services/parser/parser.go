@@ -35,6 +35,11 @@ type DrivesData struct {
 	FSType     string `json:"fs_type"`
 }
 
+type SidebarData struct {
+	DirectoryName string `json:"directory_name"`
+	DirectoryPath string `json:"directory_path"`
+}
+
 func SysDataParser() SysData {
 	RAMTotal, RAMUsed, RAMUsage := sys.RAM()
 	DiskTotal, DiskUsed, DiskUsage := sys.Disk()
@@ -101,5 +106,53 @@ func DrivesDataParser() {
 
 	if err := encoder.Encode(mounts); err != nil {
 		log.Println("Error encoding mounted drives:", err)
+	}
+}
+
+func SidebarDataParser() {
+	homeDir, err := file.GetHomeDirectory()
+	if err != nil {
+		log.Println("Error fetching home directory:", err)
+		return
+	}
+
+	var sidebar []SidebarData
+
+	// Add Home directory to sidebar
+	sidebar = append(sidebar, SidebarData{
+		DirectoryName: "Home",
+		DirectoryPath: homeDir,
+	})
+
+	// Add contents inside $HOME to sidebar
+	entries, err := os.ReadDir(homeDir)
+	if err != nil {
+		log.Println("Error reading home directory contents:", err)
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			if entry.Name() == "Downloads" || entry.Name() == "Documents" || entry.Name() == "Pictures" || entry.Name() == "Music" || entry.Name() == "Videos" || entry.Name() == "Desktop" {
+				sidebar = append(sidebar, SidebarData{
+					DirectoryName: entry.Name(),
+					DirectoryPath: homeDir + "/" + entry.Name(),
+				})
+			}
+		}
+	}
+
+	jsoner, jerr := os.OpenFile("sidebar.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+
+	if jerr != nil {
+		log.Println("Error writing JSON:", jerr)
+		return
+	}
+	defer jsoner.Close()
+
+	encoder := json.NewEncoder(jsoner)
+
+	if err := encoder.Encode(sidebar); err != nil {
+		log.Println("Error encoding sidebar data:", err)
 	}
 }
