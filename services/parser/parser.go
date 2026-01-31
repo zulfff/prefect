@@ -131,9 +131,12 @@ func SidebarDataParser() {
 		return
 	}
 
+	// Initialize default directories in case they don't exist
+	file.DefaultDirectories()
+
 	for _, entry := range entries {
 		if entry.IsDir() {
-			if entry.Name() == "Downloads" || entry.Name() == "Documents" || entry.Name() == "Pictures" || entry.Name() == "Music" || entry.Name() == "Videos" || entry.Name() == "Desktop" {
+			if entry.Name() == "Downloads" || entry.Name() == "Documents" || entry.Name() == "Media" {
 				sidebar = append(sidebar, SidebarData{
 					DirectoryName: entry.Name(),
 					DirectoryPath: homeDir + "/" + entry.Name(),

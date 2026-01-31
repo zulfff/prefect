@@ -2,5 +2,17 @@
     {
         "directory_name": "Home",
         "directory_path": "/home/daniswastaken"
+    },
+    {
+        "directory_name": "Documents",
+        "directory_path": "/home/daniswastaken/Documents"
+    },
+    {
+        "directory_name": "Downloads",
+        "directory_path": "/home/daniswastaken/Downloads"
+    },
+    {
+        "directory_name": "Media",
+        "directory_path": "/home/daniswastaken/Media"
     }
 ]
