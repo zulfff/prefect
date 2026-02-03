@@ -35,7 +35,7 @@ func FileEntries() ([]FilesList, error) {
 		log.Fatal(err)
 	}
 
-	currentPath := prototypeDirectory
+	var currentPath = prototypeDirectory
 
 	entries, err := os.ReadDir(currentPath)
 	if err != nil {
