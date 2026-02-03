@@ -1,0 +1,219 @@
+[
+    {
+        "name": ".antigravity-server",
+        "size": 4096,
+        "path": "/home/daniswastaken/.antigravity-server",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".aws",
+        "size": 31,
+        "path": "/home/daniswastaken/.aws",
+        "is_dir": false,
+        "extensions": "aws"
+    },
+    {
+        "name": ".azure",
+        "size": 33,
+        "path": "/home/daniswastaken/.azure",
+        "is_dir": false,
+        "extensions": "azure"
+    },
+    {
+        "name": ".bash_history",
+        "size": 7812,
+        "path": "/home/daniswastaken/.bash_history",
+        "is_dir": false,
+        "extensions": "bash_history"
+    },
+    {
+        "name": ".bash_logout",
+        "size": 220,
+        "path": "/home/daniswastaken/.bash_logout",
+        "is_dir": false,
+        "extensions": "bash_logout"
+    },
+    {
+        "name": ".bashrc",
+        "size": 3968,
+        "path": "/home/daniswastaken/.bashrc",
+        "is_dir": false,
+        "extensions": "bashrc"
+    },
+    {
+        "name": ".cache",
+        "size": 4096,
+        "path": "/home/daniswastaken/.cache",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".config",
+        "size": 4096,
+        "path": "/home/daniswastaken/.config",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".docker",
+        "size": 4096,
+        "path": "/home/daniswastaken/.docker",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".dotnet",
+        "size": 4096,
+        "path": "/home/daniswastaken/.dotnet",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".gemini",
+        "size": 4096,
+        "path": "/home/daniswastaken/.gemini",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".gitconfig",
+        "size": 62,
+        "path": "/home/daniswastaken/.gitconfig",
+        "is_dir": false,
+        "extensions": "gitconfig"
+    },
+    {
+        "name": ".local",
+        "size": 4096,
+        "path": "/home/daniswastaken/.local",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".motd_shown",
+        "size": 0,
+        "path": "/home/daniswastaken/.motd_shown",
+        "is_dir": false,
+        "extensions": "motd_shown"
+    },
+    {
+        "name": ".npm",
+        "size": 4096,
+        "path": "/home/daniswastaken/.npm",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".nvm",
+        "size": 4096,
+        "path": "/home/daniswastaken/.nvm",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".pki",
+        "size": 4096,
+        "path": "/home/daniswastaken/.pki",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".profile",
+        "size": 844,
+        "path": "/home/daniswastaken/.profile",
+        "is_dir": false,
+        "extensions": "profile"
+    },
+    {
+        "name": ".ssh",
+        "size": 4096,
+        "path": "/home/daniswastaken/.ssh",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".sudo_as_admin_successful",
+        "size": 0,
+        "path": "/home/daniswastaken/.sudo_as_admin_successful",
+        "is_dir": false,
+        "extensions": "sudo_as_admin_successful"
+    },
+    {
+        "name": ".viminfo",
+        "size": 1066,
+        "path": "/home/daniswastaken/.viminfo",
+        "is_dir": false,
+        "extensions": "viminfo"
+    },
+    {
+        "name": ".vscode-server",
+        "size": 4096,
+        "path": "/home/daniswastaken/.vscode-server",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": ".w3m",
+        "size": 4096,
+        "path": "/home/daniswastaken/.w3m",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "Documents",
+        "size": 4096,
+        "path": "/home/daniswastaken/Documents",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "Downloads",
+        "size": 4096,
+        "path": "/home/daniswastaken/Downloads",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "Media",
+        "size": 4096,
+        "path": "/home/daniswastaken/Media",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "dailyearly",
+        "size": 4096,
+        "path": "/home/daniswastaken/dailyearly",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "go",
+        "size": 4096,
+        "path": "/home/daniswastaken/go",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "prefect",
+        "size": 4096,
+        "path": "/home/daniswastaken/prefect",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "wiki",
+        "size": 4096,
+        "path": "/home/daniswastaken/wiki",
+        "is_dir": true,
+        "extensions": "directory"
+    },
+    {
+        "name": "xyz",
+        "size": 5,
+        "path": "/home/daniswastaken/xyz",
+        "is_dir": false,
+        "extensions": ""
+    }
+]

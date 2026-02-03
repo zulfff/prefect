@@ -10,6 +10,7 @@ import (
 func main() {
 	parser.DrivesDataParser()
 	parser.SidebarDataParser()
+	parser.FileEntriesParser()
 	// 1. The WebSocket API route
 	// This maps the TypeScript "new WebSocket('ws://.../ws')" to your Go handler
 	http.HandleFunc("/ws", api.StreamStats)

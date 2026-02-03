@@ -159,3 +159,26 @@ func SidebarDataParser() {
 		log.Println("Error encoding sidebar data:", err)
 	}
 }
+
+func FileEntriesParser() {
+	filesList, err := file.FileEntries()
+	if err != nil {
+		log.Println("Error fetching file entries:", err)
+		return
+	}
+
+	// Write to drives.json
+	jsoner, jerr := os.OpenFile("file_entries.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+
+	if jerr != nil {
+		log.Println("Error writing JSON:", jerr)
+		return
+	}
+	defer jsoner.Close()
+
+	encoder := json.NewEncoder(jsoner)
+
+	if err := encoder.Encode(filesList); err != nil {
+		log.Println("Error encoding file entries:", err)
+	}
+}
