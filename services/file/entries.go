@@ -2,7 +2,6 @@ package file
 
 import (
 	"path/filepath"
-	"log"
 	"os"
 )
 
@@ -32,7 +31,7 @@ func determineExtension(entry os.DirEntry) string {
 func FileEntries() ([]FilesList, error) {
 	prototypeDirectory, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var currentPath = prototypeDirectory
@@ -54,10 +53,10 @@ func FileEntries() ([]FilesList, error) {
 			Name:       entry.Name(),
 			Size:       info.Size(),
 			Path:       filepath.Join(currentPath, entry.Name()),
-			IsDir:      entry.Type().IsDir(),
+			IsDir:      entry.IsDir(),
 			Extensions: determineExtension(entry),
 		})
 	}
 
-	return filesList, err
+	return filesList, nil
 }

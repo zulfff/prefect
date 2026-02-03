@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"log"
 	"os"
 	"prefect/services/file"
@@ -40,6 +40,14 @@ type SidebarData struct {
 	DirectoryPath string `json:"directory_path"`
 }
 
+type FilesList struct {
+	Name       string `json:"name"`
+	Size       int64  `json:"size"`
+	Path       string `json:"path"`
+	IsDir      bool   `json:"is_dir"`
+	Extensions string `json:"extensions"`
+}
+
 func SysDataParser() SysData {
 	RAMTotal, RAMUsed, RAMUsage := sys.RAM()
 	DiskTotal, DiskUsed, DiskUsage := sys.Disk()
@@ -60,12 +68,11 @@ func SysDataParser() SysData {
 	}
 }
 
-func DrivesDataParser() {
+func DrivesDataParser() ([]DrivesData, error) {
 	allMounts, err := file.GetMountedDrives()
 
 	if err != nil {
-		log.Println("Error fetching mounted drives:", err)
-		return
+		log.Fatal("Error fetching mounted drives:", err)
 	}
 
 	var filteredMounts []DrivesData
@@ -91,29 +98,13 @@ func DrivesDataParser() {
 		}
 	}
 
-	mounts := filteredMounts
-
-	// Write to drives.json
-	jsoner, jerr := os.OpenFile("drives.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
-
-	if jerr != nil {
-		log.Println("Error writing JSON:", jerr)
-		return
-	}
-	defer jsoner.Close()
-
-	encoder := json.NewEncoder(jsoner)
-
-	if err := encoder.Encode(mounts); err != nil {
-		log.Println("Error encoding mounted drives:", err)
-	}
+	return filteredMounts, nil
 }
 
-func SidebarDataParser() {
+func SidebarDataParser() ([]SidebarData, error){
 	homeDir, err := file.GetHomeDirectory()
 	if err != nil {
-		log.Println("Error fetching home directory:", err)
-		return
+		log.Fatal("Error fetching home directory:", err)
 	}
 
 	var sidebar []SidebarData
@@ -127,8 +118,7 @@ func SidebarDataParser() {
 	// Add contents inside $HOME to sidebar
 	entries, err := os.ReadDir(homeDir)
 	if err != nil {
-		log.Println("Error reading home directory contents:", err)
-		return
+		log.Fatal("Error reading home directory contents:", err)
 	}
 
 	// Initialize default directories in case they don't exist
@@ -145,40 +135,16 @@ func SidebarDataParser() {
 		}
 	}
 
-	jsoner, jerr := os.OpenFile("sidebar.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
-
-	if jerr != nil {
-		log.Println("Error writing JSON:", jerr)
-		return
-	}
-	defer jsoner.Close()
-
-	encoder := json.NewEncoder(jsoner)
-
-	if err := encoder.Encode(sidebar); err != nil {
-		log.Println("Error encoding sidebar data:", err)
-	}
+	return sidebar, nil
 }
 
-func FileEntriesParser() {
+func FileEntriesParser() ([]file.FilesList, error) {
 	filesList, err := file.FileEntries()
 	if err != nil {
 		log.Println("Error fetching file entries:", err)
-		return
 	}
 
-	// Write to drives.json
-	jsoner, jerr := os.OpenFile("file_entries.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	// For future logic exist there
 
-	if jerr != nil {
-		log.Println("Error writing JSON:", jerr)
-		return
-	}
-	defer jsoner.Close()
-
-	encoder := json.NewEncoder(jsoner)
-
-	if err := encoder.Encode(filesList); err != nil {
-		log.Println("Error encoding file entries:", err)
-	}
+	return filesList, nil
 }
