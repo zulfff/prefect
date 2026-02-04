@@ -14,7 +14,9 @@ type FileExplorer struct {
 }
 
 func FileExplorerAPI(response http.ResponseWriter, request *http.Request) {
-	filesData, err := parser.FileEntriesParser()
+	path := request.URL.Query().Get("path")
+
+	filesData, err := parser.FileEntriesParser(path)
 	if err != nil {
 		http.Error(response, "Failed to get file entries", http.StatusInternalServerError)
 		return

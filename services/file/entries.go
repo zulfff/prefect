@@ -28,13 +28,19 @@ func determineExtension(entry os.DirEntry) string {
     return getExtension(entry.Name())
 }
 
-func FileEntries() ([]FilesList, error) {
-	prototypeDirectory, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
+func FileEntries(path string) ([]FilesList, error) {
+	var currentPath string
 
-	var currentPath = prototypeDirectory
+	// Default to HOME if path is empty
+	if path == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+		currentPath = home
+	} else {
+		currentPath = path
+	}
 
 	entries, err := os.ReadDir(currentPath)
 	if err != nil {

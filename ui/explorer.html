@@ -1,20 +1,45 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Prefect Explorer</title>
-    </head>
-    <body>
-        <!-- File Entries Section -->
-        <div class="files" id="files"></div>
 
-        <!-- Sidebar Section (Home, Documents, Downloads, Media)-->
-        <div class="sidebar" id="sidebar"></div>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prefect Explorer</title>
+    <link rel="stylesheet" href="explorer.css" />
+    <link rel="icon" type="image/svg+xml" href="./media/favicon.svg" />
+</head>
 
-        <!-- Drives Mount Section-->
-        <div class="mount" id="mount"></div>
+<body>
+    <div class="explorer-container">
+        <!-- Left Sidebar -->
+        <aside class="explorer-sidebar">
+            <!-- Shortcuts: Home, Documents, Downloads, Media -->
+            <section class="shortcuts-section" id="shortcuts"></section>
 
-        <script src="explorer.js"></script>
-    </body>
+            <!-- Mounted Drives -->
+            <section class="drives-section" id="drives"></section>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="explorer-main">
+            <!-- Path Bar with Breadcrumbs and Close Button -->
+            <header class="path-bar">
+                <nav class="path-breadcrumbs" id="breadcrumbs"></nav>
+                <button class="close-btn" id="close-btn" title="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+                </button>
+            </header>
+
+            <!-- File Grid -->
+            <div class="files-grid" id="files"></div>
+        </main>
+    </div>
+
+    <script src="explorer.js"></script>
+</body>
+
 </html>

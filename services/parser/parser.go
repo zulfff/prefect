@@ -138,8 +138,8 @@ func SidebarDataParser() ([]SidebarData, error){
 	return sidebar, nil
 }
 
-func FileEntriesParser() ([]file.FilesList, error) {
-	filesList, err := file.FileEntries()
+func FileEntriesParser(path string) ([]file.FilesList, error) {
+	filesList, err := file.FileEntries(path)
 	if err != nil {
 		log.Println("Error fetching file entries:", err)
 	}
