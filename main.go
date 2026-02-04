@@ -9,6 +9,7 @@ import (
 func main() {
 	// 1. The WebSocket API route
 	// This maps the TypeScript "new WebSocket('ws://.../ws')" to your Go handler
+	http.HandleFunc("/api/explorer", api.FileExplorerAPI)
 	http.HandleFunc("/ws", api.StreamStats)
 
 	// 2. The Static Web UI
