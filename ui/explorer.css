@@ -224,8 +224,8 @@ body {
   height: 20px;
 }
 
-/* ===== Files Grid ===== */
 .files-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   grid-auto-rows: max-content;
@@ -304,15 +304,18 @@ body {
 
 /* ===== Empty State ===== */
 .empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
   color: var(--text-secondary);
   font-size: 14px;
   gap: 8px;
-  grid-column: 1 / -1;
+  pointer-events: none;
 }
 
 /* ===== Responsive ===== */
