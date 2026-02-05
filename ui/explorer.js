@@ -20,11 +20,6 @@ const SIDEBAR_ICONS = {
   Media: "icon/media.svg",
 };
 
-const FILE_ICONS = {
-  folder: "icon/folder.svg",
-  file: "icon/file.svg",
-};
-
 const DRIVE_ICON = "icon/mnt.svg";
 
 // ===== 4. Utility Functions =====
@@ -49,8 +44,19 @@ function getSidebarIcon(name) {
 /**
  * Get icon source for a file/folder
  */
-function getFileIcon(isDir) {
-  return isDir ? FILE_ICONS.folder : FILE_ICONS.file;
+function getFileIcon(file) {
+  if (file.is_dir) {
+    return "icon/folder.svg";
+  }
+
+  // Use the global getIconName function from icons.js
+  const iconName = getIconName(file.name);
+
+  if (iconName === 'file') {
+    return "icon/file.svg";
+  }
+
+  return `icons/${iconName}.svg`;
 }
 
 /**
@@ -91,7 +97,7 @@ function SidebarItem(name, path, iconSrc) {
 function FileCard(file) {
   const div = document.createElement("div");
   div.className = "file-card";
-  const iconSrc = getFileIcon(file.is_dir);
+  const iconSrc = getFileIcon(file);
 
   div.innerHTML = `
     <img src="${iconSrc}" alt="${file.is_dir ? 'Folder' : 'File'}" />
