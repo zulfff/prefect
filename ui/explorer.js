@@ -321,4 +321,6 @@ closeBtnEl.onclick = () => {
 };
 
 // ===== 9. Initial Load =====
-loadExplorer();
+iconsLoaded.then(() => {
+  loadExplorer();
+});
