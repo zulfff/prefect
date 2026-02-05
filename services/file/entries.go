@@ -1,8 +1,8 @@
 package file
 
 import (
-	"path/filepath"
 	"os"
+	"path/filepath"
 )
 
 type FilesList struct {
@@ -11,6 +11,7 @@ type FilesList struct {
 	Path       string `json:"path"`
 	IsDir      bool   `json:"is_dir"`
 	Extensions string `json:"extensions"`
+	Icon       string `json:"icon"`
 }
 
 func getExtension(fileName string) string {
@@ -22,10 +23,10 @@ func getExtension(fileName string) string {
 }
 
 func determineExtension(entry os.DirEntry) string {
-    if entry.IsDir() {
-        return "directory"
-    }
-    return getExtension(entry.Name())
+	if entry.IsDir() {
+		return "directory"
+	}
+	return getExtension(entry.Name())
 }
 
 func FileEntries(path string) ([]FilesList, error) {
@@ -61,6 +62,7 @@ func FileEntries(path string) ([]FilesList, error) {
 			Path:       filepath.Join(currentPath, entry.Name()),
 			IsDir:      entry.IsDir(),
 			Extensions: determineExtension(entry),
+			Icon:       GetIconName(entry.Name(), entry.IsDir()),
 		})
 	}
 
