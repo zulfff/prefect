@@ -46,7 +46,13 @@ function getSidebarIcon(name) {
  */
 function getFileIcon(file) {
   if (file.is_dir) {
-    return "icon/folder.svg";
+    const iconName = getFolderIconName(file.name);
+    // If the iconName is just 'folder', it means no specific match was found.
+    // We'll use the generic icon from the original set to ensure it loads.
+    if (iconName === 'folder') {
+      return "icon/folder.svg";
+    }
+    return `folder_icon/${iconName}.svg`;
   }
 
   // Use the global getIconName function from icons.js
