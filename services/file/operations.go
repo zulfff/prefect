@@ -156,3 +156,189 @@ func CopyFile(sourcePath string, destinationDir string) error {
 
 	return nil
 }
+
+// Copy folder function
+func CopyFolder(sourcePath string, destinationDir string) error {
+	// Clean the paths
+	cleanSourcePath := filepath.Clean(sourcePath)
+	cleanDestinationDir := filepath.Clean(destinationDir)
+
+	// Construct absolute paths
+	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
+	sourceLocation := filepath.Join(root, cleanSourcePath)
+
+	// Ensure source and destination are within root
+	folderRelPath, err := filepath.Rel(root, sourceLocation)
+	if err != nil || strings.HasPrefix(folderRelPath, "..") {
+		return os.ErrPermission
+	}
+
+	desRelPath, err := filepath.Rel(root, destinationDirLocation)
+	if err != nil || strings.HasPrefix(desRelPath, "..") {
+		return os.ErrPermission
+	}
+
+	destinationFolder := filepath.Join(destinationDirLocation, filepath.Base(sourcePath))
+
+	// Check source file existence and is it a directory?
+	if f, err := os.Stat(sourceLocation); err != nil {
+		return os.ErrNotExist
+	} else if !f.IsDir() {
+		return os.ErrInvalid
+	}
+
+	// Check the destination folder and is it a directory?
+	if _, err := os.Stat(destinationFolder); err == nil {
+		return os.ErrExist
+	}
+
+	info, err := os.Stat(destinationDirLocation)
+	if err != nil {
+		return os.ErrNotExist
+	}
+	if !info.IsDir() {
+		return os.ErrInvalid
+	}
+
+	// Perform the copy operation
+	folderContents, err := os.ReadDir(sourceLocation)
+	if err != nil {
+		return err
+	}
+
+	err = os.Mkdir(destinationFolder, 0755)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range folderContents {
+		srcPath := filepath.Join(sourceLocation, entry.Name())
+
+		if entry.IsDir() {
+			err = CopyFolder(srcPath, destinationFolder)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = CopyFile(srcPath, destinationFolder)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// Cut file function
+func CutFile(sourcePath string, destinationDir string) error {
+	// Clean the paths
+	cleanSourcePath := filepath.Clean(sourcePath)
+	cleanDestinationDir := filepath.Clean(destinationDir)
+
+	// Construct absolute paths
+	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
+	sourceLocation := filepath.Join(root, cleanSourcePath)
+
+	// Ensure source and destination are within root
+	fileRelPath, err := filepath.Rel(root, sourceLocation)
+	if err != nil || strings.HasPrefix(fileRelPath, "..") {
+		return os.ErrPermission
+	}
+
+	desRelPath, err := filepath.Rel(root, destinationDirLocation)
+	if err != nil || strings.HasPrefix(desRelPath, "..") {
+		return os.ErrPermission
+	}
+
+	destinationFile := filepath.Join(destinationDirLocation, filepath.Base(sourcePath))
+
+	// Check source file existence and is it not a directory?
+	if f, err := os.Stat(sourceLocation); err != nil {
+		return os.ErrNotExist
+	} else if f.IsDir() {
+		return os.ErrInvalid
+	}
+
+	// Check the destination file and is it a directory?
+	if _, err := os.Stat(destinationFile); err == nil {
+		return os.ErrExist
+	}
+
+	info, err := os.Stat(destinationDirLocation)
+	if err != nil {
+		return os.ErrNotExist
+	}
+	if !info.IsDir() {
+		return os.ErrInvalid
+	}
+
+	// Perform the cut operation
+	if err := os.Rename(sourceLocation, destinationFile); err == nil {
+		return nil
+	}
+
+	// fallback cross-filesystem cut
+	if err := CopyFile(sourcePath, destinationDir); err != nil {
+		return err
+	}
+
+	return os.Remove(sourceLocation)
+
+}
+
+// Cut folder function
+func CutFolder(sourcePath string, destinationDir string) error {
+	// Clean the paths
+	cleanSourcePath := filepath.Clean(sourcePath)
+	cleanDestinationDir := filepath.Clean(destinationDir)
+
+	// Construct absolute paths
+	destinationDirLocation := filepath.Join(root, cleanDestinationDir)
+	sourceLocation := filepath.Join(root, cleanSourcePath)
+
+	// Ensure source and destination are within root
+	folderRelPath, err := filepath.Rel(root, sourceLocation)
+	if err != nil || strings.HasPrefix(folderRelPath, "..") {
+		return os.ErrPermission
+	}
+
+	desRelPath, err := filepath.Rel(root, destinationDirLocation)
+	if err != nil || strings.HasPrefix(desRelPath, "..") {
+		return os.ErrPermission
+	}
+
+	destinationFolder := filepath.Join(destinationDirLocation, filepath.Base(sourcePath))
+
+	// Check source file existence and is it a directory?
+	if f, err := os.Stat(sourceLocation); err != nil {
+		return os.ErrNotExist
+	} else if !f.IsDir() {
+		return os.ErrInvalid
+	}
+
+	// Check the destination folder and is it a directory?
+	if _, err := os.Stat(destinationFolder); err == nil {
+		return os.ErrExist
+	}
+
+	info, err := os.Stat(destinationDirLocation)
+	if err != nil {
+		return os.ErrNotExist
+	}
+	if !info.IsDir() {
+		return os.ErrInvalid
+	}
+
+	// Perform the cut operation
+	if err := os.Rename(sourceLocation, destinationFolder); err == nil {
+		return nil
+	}
+
+	// Fallback cross-filesystem move
+	if err := CopyFolder(sourcePath, destinationDir); err != nil {
+		return err
+	}
+
+	return os.RemoveAll(sourceLocation)
+}

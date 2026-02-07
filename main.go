@@ -4,9 +4,13 @@ import (
 	"log"
 	"net/http"
 	"prefect/api"
+	"prefect/services/file"
 )
 
 func main() {
+	// Initialize default directories in case they don't exist
+	file.DefaultDirectories()
+
 	// 1. The WebSocket API route
 	// This maps the TypeScript "new WebSocket('ws://.../ws')" to your Go handler
 	http.HandleFunc("/api/explorer", api.FileExplorerAPI)

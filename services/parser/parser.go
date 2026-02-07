@@ -121,9 +121,6 @@ func SidebarDataParser() ([]SidebarData, error){
 		log.Fatal("Error reading home directory contents:", err)
 	}
 
-	// Initialize default directories in case they don't exist
-	file.DefaultDirectories()
-
 	for _, entry := range entries {
 		if entry.IsDir() {
 			if entry.Name() == "Downloads" || entry.Name() == "Documents" || entry.Name() == "Media" {
