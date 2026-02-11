@@ -51,11 +51,11 @@ func GetAllowedRoots() []string {
 	return roots
 }
 
-// resolveAndValidatePath converts a path to absolute and validates it's within allowed roots.
+// ResolveAndValidatePath converts a path to absolute and validates it's within allowed roots.
 // For paths starting with /, it validates against all allowed roots.
 // For relative paths, it resolves against the home directory.
 // Returns the absolute path and the root it belongs to, or an error.
-func resolveAndValidatePath(path string) (absPath string, root string, err error) {
+func ResolveAndValidatePath(path string) (absPath string, root string, err error) {
 	cleanPath := filepath.Clean(path)
 
 	// Determine if path is absolute or relative
@@ -90,7 +90,7 @@ func RenameFile(sourcePath string, newName string) error {
 	}
 
 	// Validate and resolve path
-	absPath, _, err := resolveAndValidatePath(sourcePath)
+	absPath, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -110,7 +110,7 @@ func RenameFile(sourcePath string, newName string) error {
 // Delete file function
 func DeleteFile(path string) error {
 	// Validate and resolve path
-	absPath, _, err := resolveAndValidatePath(path)
+	absPath, _, err := ResolveAndValidatePath(path)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -127,7 +127,7 @@ func DeleteFile(path string) error {
 // Delete folder function
 func DeleteFolder(path string) error {
 	// Validate and resolve path
-	absPath, root, err := resolveAndValidatePath(path)
+	absPath, root, err := ResolveAndValidatePath(path)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -149,13 +149,13 @@ func DeleteFolder(path string) error {
 // Copy file function
 func CopyFile(sourcePath string, destinationDir string) error {
 	// Validate source path
-	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	sourceLocation, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
 
 	// Validate destination path
-	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	destinationDirLocation, _, err := ResolveAndValidatePath(destinationDir)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -207,13 +207,13 @@ func CopyFile(sourcePath string, destinationDir string) error {
 // Copy folder function
 func CopyFolder(sourcePath string, destinationDir string) error {
 	// Validate source path
-	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	sourceLocation, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
 
 	// Validate destination path
-	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	destinationDirLocation, _, err := ResolveAndValidatePath(destinationDir)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -275,13 +275,13 @@ func CopyFolder(sourcePath string, destinationDir string) error {
 // Cut file function
 func CutFile(sourcePath string, destinationDir string) error {
 	// Validate source path
-	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	sourceLocation, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
 
 	// Validate destination path
-	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	destinationDirLocation, _, err := ResolveAndValidatePath(destinationDir)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -325,13 +325,13 @@ func CutFile(sourcePath string, destinationDir string) error {
 // Cut folder function
 func CutFolder(sourcePath string, destinationDir string) error {
 	// Validate source path
-	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	sourceLocation, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
 
 	// Validate destination path
-	destinationDirLocation, _, err := resolveAndValidatePath(destinationDir)
+	destinationDirLocation, _, err := ResolveAndValidatePath(destinationDir)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -375,7 +375,7 @@ func CutFolder(sourcePath string, destinationDir string) error {
 // Generic Delete function (handles both file and folder)
 func Delete(path string) error {
 	// Validate and resolve path
-	absPath, _, err := resolveAndValidatePath(path)
+	absPath, _, err := ResolveAndValidatePath(path)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -394,7 +394,7 @@ func Delete(path string) error {
 // Generic Copy function (handles both file and folder)
 func Copy(sourcePath, destinationDir string) error {
 	// Validate source path
-	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	sourceLocation, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
@@ -413,7 +413,7 @@ func Copy(sourcePath, destinationDir string) error {
 // Generic Cut function (handles both file and folder)
 func Cut(sourcePath, destinationDir string) error {
 	// Validate source path
-	sourceLocation, _, err := resolveAndValidatePath(sourcePath)
+	sourceLocation, _, err := ResolveAndValidatePath(sourcePath)
 	if err != nil {
 		return os.ErrPermission
 	}
