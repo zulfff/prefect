@@ -217,6 +217,29 @@ async function pasteFromClipboard() {
   }
 }
 
+function downloadFile(file) {
+  if (file.is_dir) {
+    alert("Cannot download directories");
+    return;
+  }
+
+  try {
+    // Build the download URL with the file path
+    const downloadUrl = `/api/download?path=${encodeURIComponent(file.path)}`;
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error("Download failed:", err);
+    alert("Failed to download: " + err.message);
+  }
+}
+
 // ===== 7. Context Menu =====
 
 function showContextMenu(x, y, file) {
@@ -232,17 +255,25 @@ function showContextMenu(x, y, file) {
   const pasteBtn = document.getElementById('ctx-paste');
   const renameBtn = document.getElementById('ctx-rename');
   const deleteBtn = document.getElementById('ctx-delete');
+  const downloadBtn = document.getElementById('ctx-download');
 
   if (file) {
     copyBtn.classList.remove('disabled');
     cutBtn.classList.remove('disabled');
     renameBtn.classList.remove('disabled');
     deleteBtn.classList.remove('disabled');
+    // Only enable download for files, not directories
+    if (!file.is_dir) {
+      downloadBtn.classList.remove('disabled');
+    } else {
+      downloadBtn.classList.add('disabled');
+    }
   } else {
     copyBtn.classList.add('disabled');
     cutBtn.classList.add('disabled');
     renameBtn.classList.add('disabled');
     deleteBtn.classList.add('disabled');
+    downloadBtn.classList.add('disabled');
   }
 
   // Enable paste only if clipboard has items
@@ -679,6 +710,13 @@ document.getElementById('ctx-rename').onclick = () => {
 document.getElementById('ctx-delete').onclick = () => {
   if (selectedFile) {
     showDeleteModal(selectedFile);
+  }
+  hideContextMenu();
+};
+
+document.getElementById('ctx-download').onclick = () => {
+  if (selectedFile && !selectedFile.is_dir) {
+    downloadFile(selectedFile);
   }
   hideContextMenu();
 };

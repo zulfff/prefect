@@ -21,15 +21,17 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if d, err := os.Stat(absPath); err != nil {
+	info, err := os.Stat(absPath)
+
+	if err != nil {
 		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	} else if d.IsDir() {
-		http.Error(w, "Path is a directory", http.StatusBadRequest)
 		return
 	}
 
-	info, _ := os.Stat(absPath)
+	if info.IsDir() {
+		http.Error(w, "Path is a directory", http.StatusBadRequest)
+		return
+	}
 
 	// Force download instead of inline display
 	w.Header().Set("Content-Disposition", `attachment; filename="`+info.Name()+`"`)

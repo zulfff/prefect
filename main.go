@@ -15,6 +15,9 @@ func main() {
 	http.HandleFunc("/api/explorer/copy", api.CopyAPI)
 	http.HandleFunc("/api/explorer/cut", api.CutAPI)
 
+	// Setup download API
+	http.HandleFunc("/api/download", api.DownloadFile)
+
 	// 1. The WebSocket API route
 	// This maps the TypeScript "new WebSocket('ws://.../ws')" to your Go handler
 	http.HandleFunc("/api/explorer", api.FileExplorerAPI)
