@@ -218,19 +218,16 @@ async function pasteFromClipboard() {
 }
 
 function downloadFile(file) {
-  if (file.is_dir) {
-    alert("Cannot download directories");
-    return;
-  }
-
   try {
     // Build the download URL with the file path
-    const downloadUrl = `/api/download?path=${encodeURIComponent(file.path)}`;
+    const downloadUrl = file.is_dir 
+      ? `/api/download/folder?path=${encodeURIComponent(file.path)}`
+      : `/api/download?path=${encodeURIComponent(file.path)}`;
     
     // Create a temporary link and trigger download
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = file.name;
+    link.download = file.is_dir ? `${file.name}.zip` : file.name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -262,12 +259,7 @@ function showContextMenu(x, y, file) {
     cutBtn.classList.remove('disabled');
     renameBtn.classList.remove('disabled');
     deleteBtn.classList.remove('disabled');
-    // Only enable download for files, not directories
-    if (!file.is_dir) {
-      downloadBtn.classList.remove('disabled');
-    } else {
-      downloadBtn.classList.add('disabled');
-    }
+    downloadBtn.classList.remove('disabled');
   } else {
     copyBtn.classList.add('disabled');
     cutBtn.classList.add('disabled');
@@ -715,7 +707,7 @@ document.getElementById('ctx-delete').onclick = () => {
 };
 
 document.getElementById('ctx-download').onclick = () => {
-  if (selectedFile && !selectedFile.is_dir) {
+  if (selectedFile) {
     downloadFile(selectedFile);
   }
   hideContextMenu();

@@ -17,6 +17,7 @@ func main() {
 
 	// Setup download API
 	http.HandleFunc("/api/download", api.DownloadFile)
+	http.HandleFunc("/api/download/folder", api.DownloadFolder)
 
 	// 1. The WebSocket API route
 	// This maps the TypeScript "new WebSocket('ws://.../ws')" to your Go handler
