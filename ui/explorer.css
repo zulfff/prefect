@@ -113,13 +113,12 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius-sm);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  transition: background 0.2s ease;
   flex-shrink: 0;
 }
 
 .sidebar-item:hover {
   background: var(--glass-bg-hover);
-  transform: translateX(4px);
 }
 
 .sidebar-item img {
@@ -269,7 +268,7 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius-sm);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   width: 100%;
@@ -277,7 +276,6 @@ body {
 
 .file-card:hover {
   background: var(--glass-bg-hover);
-  transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
@@ -343,9 +341,6 @@ body {
     min-width: 140px;
   }
   
-  .sidebar-item:hover {
-    transform: translateY(-2px);
-  }
 }
 
 /* ===== File Card Selection States ===== */
@@ -506,7 +501,7 @@ body {
   font-weight: 500;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  transition: background 0.2s ease;
   border: none;
 }
 
@@ -526,7 +521,6 @@ body {
 
 .btn-confirm:hover {
   background: rgba(100, 150, 255, 1);
-  transform: translateY(-1px);
 }
 
 .btn-confirm.danger {
