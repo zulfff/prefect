@@ -17,19 +17,16 @@ Live demo coming soon.
 ```
 
 <p align="center">
-    <p>Main dashboard."</p>
+    <p align="center">Main dashboard:</p>
     <img src="https://raw.githubusercontent.com/daniswastaken/hdn/main/prefect/demo-1.png" alt="Prefect Banner" width="100%">
-    <br/>
 </p>
 
 <p align="center">
-    <p>File explorer."</p>
+    <p align="center">File explorer:</p>
     <img src="https://raw.githubusercontent.com/daniswastaken/hdn/main/prefect/demo-2.png" alt="Prefect Banner" width="100%">
-    <br/>
 </p>
 
 <p align="center">
-    <p>Supports various file extension icons."</p>
+    <p align="center">Supports various file extension icons."</p>
     <img src="https://raw.githubusercontent.com/daniswastaken/hdn/main/prefect/demo-3.png" alt="Prefect Banner" width="100%">
-    <br/>
 </p>
