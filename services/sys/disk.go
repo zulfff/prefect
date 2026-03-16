@@ -2,7 +2,7 @@ package sys
 
 import (
 	"math"
-	"github.com/shirou/gopsutil/v4/disk"
+	"github.com/shirou/gopsutil/v3/disk"
 )
 
 func Disk() (uint64, uint64, int) {

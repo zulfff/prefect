@@ -1,14 +1,25 @@
 package api
 
 import (
-    "net/http"
-    "time"
-    "prefect/services/parser"
-    "github.com/gorilla/websocket"
+	"net/http"
+	"strings"
+	"time"
+	"prefect/services/parser"
+	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
-    CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			return true
+		}
+		if strings.HasPrefix(origin, "http://localhost:8080") ||
+			strings.HasPrefix(origin, "https://localhost:8080") {
+			return true
+		}
+		return false
+	},
 }
 
 func StreamStats(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +32,6 @@ func StreamStats(w http.ResponseWriter, r *http.Request) {
     for {
         data := parser.SysDataParser()
 
-        // Sending data to browser throguh websocket
         if err := connection.WriteJSON(data); err != nil {
             break 
         }

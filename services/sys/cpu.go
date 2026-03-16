@@ -1,12 +1,12 @@
 package sys
 
 import (
-	"github.com/shirou/gopsutil/v3/host" // temp sensors only ava on v3
-	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/host"
+	"os"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
-	"os"
 )
 
 func CPUCores() int {

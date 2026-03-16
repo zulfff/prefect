@@ -3,8 +3,11 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"prefect/services/file"
 	"prefect/services/parser"
+	"strings"
 )
 
 type FileExplorer struct {
@@ -13,10 +16,55 @@ type FileExplorer struct {
 	Drives  []parser.DrivesData  `json:"drives"`
 }
 
+func validateExplorerPath(path string) (absPath string, err error) {
+	if path == "" {
+		home, err := file.GetHomeDirectory()
+		if err != nil {
+			return "", os.ErrPermission
+		}
+		return home, nil
+	}
+
+	cleanPath := filepath.Clean(path)
+
+	home, err := file.GetHomeDirectory()
+	if err != nil {
+		return "", os.ErrPermission
+	}
+
+	var abs string
+	if filepath.IsAbs(cleanPath) {
+		abs = cleanPath
+	} else {
+		abs = filepath.Join(home, cleanPath)
+	}
+
+	if abs == "/" {
+		return "", os.ErrPermission
+	}
+
+	relToHome, err := filepath.Rel(home, abs)
+	if err == nil && !strings.HasPrefix(relToHome, "..") && relToHome != ".." {
+		return abs, nil
+	}
+
+	if strings.HasPrefix(abs, "/mnt/") || strings.HasPrefix(abs, "/media/") {
+		return abs, nil
+	}
+
+	return "", os.ErrPermission
+}
+
 func FileExplorerAPI(response http.ResponseWriter, request *http.Request) {
 	path := request.URL.Query().Get("path")
 
-	filesData, err := parser.FileEntriesParser(path)
+	absPath, err := validateExplorerPath(path)
+	if err != nil {
+		http.Error(response, "Invalid path", http.StatusForbidden)
+		return
+	}
+
+	filesData, err := parser.FileEntriesParser(absPath)
 	if err != nil {
 		http.Error(response, "Failed to get file entries", http.StatusInternalServerError)
 		return
